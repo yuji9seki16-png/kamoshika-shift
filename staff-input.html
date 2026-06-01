@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>シフト希望入力 — カモシカ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+      background: #f5f0eb;
+      margin: 0; padding: 0; color: #333;
+    }
+    header {
+      background: #4e342e; color: white;
+      padding: 16px 20px; text-align: center;
+    }
+    header h1 { margin: 0; font-size: 18px; letter-spacing: 0.05em; }
+    header p  { margin: 4px 0 0; font-size: 12px; opacity: 0.8; }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+    .card {
+      background: white; border-radius: 12px;
+      padding: 20px; margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    label.field-label {
+      display: block; font-size: 13px; font-weight: 700;
+      color: #5d4037; margin-bottom: 8px;
+    }
+    select, input[type="time"] {
+      width: 100%; padding: 10px 12px;
+      font-size: 16px; border: 1px solid #ddd;
+      border-radius: 8px; background: white;
+      appearance: none; -webkit-appearance: none;
+    }
+    select:focus, input:focus {
+      outline: none; border-color: #8d6e63;
+      box-shadow: 0 0 0 3px rgba(141,110,99,0.15);
+    }
+    .day-list { margin: 0; padding: 0; list-style: none; }
+    .day-row {
+      display: grid; grid-template-columns: 64px 1fr;
+      align-items: start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid #f0e9e4;
+    }
+    .day-row:last-child { border-bottom: none; }
+    .day-label { padding-top: 10px; font-size: 15px; font-weight: 700; color: #444; }
+    .day-label.sat { color: #1565c0; }
+    .day-label .dow { font-size: 11px; font-weight: normal; }
+    .day-inputs { display: flex; flex-direction: column; gap: 8px; }
+    select.avail-sel { font-size: 15px; padding: 8px 12px; border-radius: 8px; }
+    select.avail-sel.is-no   { background: #fff3f3; border-color: #e57373; color: #c62828; }
+    select.avail-sel.is-yes  { background: #f1f8e9; border-color: #81c784; color: #1b5e20; }
+    select.avail-sel.is-time { background: #fff8e1; border-color: #ffd54f; color: #e65100; }
+    .time-range { display: none; align-items: center; gap: 8px; }
+    .time-range.visible { display: flex; }
+    .time-range input[type="time"] { flex: 1; font-size: 15px; padding: 8px 10px; }
+    .time-sep { font-size: 14px; color: #888; flex-shrink: 0; }
+    .hint { font-size: 11px; color: #888; margin-top: 4px; }
+
+    /* 送信ボタン */
+    .btn-send {
+      width: 100%; padding: 16px;
+      background: #43a047; color: white;
+      border: none; border-radius: 10px;
+      font-size: 17px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+    .btn-send:active { opacity: 0.85; }
+    .btn-send:disabled { background: #aaa; cursor: not-allowed; }
+    .btn-send.sending { background: #1976d2; }
+
+    /* 送信結果 */
+    .send-result {
+      display: none; padding: 14px 16px;
+      border-radius: 10px; font-size: 14px;
+      line-height: 1.6; margin-top: 12px;
+    }
+    .send-result.success { background: #e8f5e9; color: #1b5e20; border: 1px solid #81c784; }
+    .send-result.error   { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+
+    /* 送信履歴 */
+    .history-section { display: none; }
+    .history-title { font-size: 13px; font-weight: 700; color: #5d4037; margin-bottom: 10px; }
+    .history-item {
+      padding: 10px 12px; background: #fafafa;
+      border: 1px solid #eee; border-radius: 8px;
+      margin-bottom: 8px; font-size: 13px;
+    }
+    .history-item .hi-ts { color: #aaa; font-size: 11px; margin-bottom: 4px; }
+    .history-item .hi-summary { color: #444; line-height: 1.6; }
+    .hi-ok   { color: #1b5e20; font-weight: 700; }
+    .hi-no   { color: #b71c1c; font-weight: 700; }
+    .hi-time { color: #e65100; font-weight: 700; }
+
+    /* 未設定バナー */
+    .setup-banner {
+      background: #fff3e0; border-left: 4px solid #ff9800;
+      padding: 12px 14px; border-radius: 0 8px 8px 0;
+      font-size: 13px; line-height: 1.6; margin-bottom: 16px;
+    }
+    .setup-msg {
+      text-align: center; color: #aaa; font-size: 14px; padding: 32px 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🦌 シフト希望入力</h1>
+  <p>発酵食堂カモシカ スタッフ用</p>
+</header>
+
+<div class="container">
+
+  <!-- GAS未設定の場合のバナー（設定後は非表示） -->
+  <div id="setup-banner" class="setup-banner" style="display:none">
+    ⚠️ まだ設定が完了していません。恵さんに連絡してください。
+  </div>
+
+  <!-- ① 月選択 -->
+  <div class="card">
+    <label class="field-label">① 月を選ぶ</label>
+    <select id="month-sel" onchange="onSettingsChange()"></select>
+  </div>
+
+  <!-- ② 名前選択 -->
+  <div class="card">
+    <label class="field-label">② 名前を選ぶ</label>
+    <select id="staff-sel" onchange="onSettingsChange()">
+      <option value="">-- 選んでください --</option>
+      <option value="akane">あかね</option>
+      <option value="miyuki">みゆき</option>
+      <option value="asami">あさみ</option>
+      <option value="kyoka">京香</option>
+      <option value="mio">みお</option>
+    </select>
+  </div>
+
+  <!-- ③ 日付入力 -->
+  <div class="card">
+    <label class="field-label">③ 各日の希望を入力してください</label>
+    <ul class="day-list" id="day-list">
+      <div class="setup-msg">月と名前を選ぶと表示されます</div>
+    </ul>
+  </div>
+
+  <!-- 送信ボタン -->
+  <div id="submit-area" style="display:none">
+    <button class="btn-send" id="send-btn" onclick="submitAvailability()">
+      送信する →
+    </button>
+    <div class="send-result" id="send-result"></div>
+  </div>
+
+  <!-- 過去の送信履歴 -->
+  <div class="card history-section" id="history-section">
+    <div class="history-title">📋 過去の送信履歴（このスタッフ・この月）</div>
+    <div id="history-list"></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ================================================================
+// ★ ここにGASのURLを貼る（デプロイ後に発行されるURL）
+// ================================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoKsne20Efq_J6QrjE_IvqXRaROV8hy_i_KqlbWG1O4mKp7Di949pNT1VBo9zOmMYn/exec';
+// ================================================================
+
+const STAFF_MAP = {
+  akane:  { name: 'あかね', maxEndHour: null },
+  miyuki: { name: 'みゆき', maxEndHour: 16 },
+  asami:  { name: 'あさみ', maxEndHour: null },
+  kyoka:  { name: '京香',   maxEndHour: null },
+  mio:    { name: 'みお',   maxEndHour: null },
+};
+const WORKING_DAYS = [2, 3, 4, 5, 6];
+const DAY_LABELS   = ['日', '月', '火', '水', '木', '金', '土'];
+
+// GAS未設定チェック
+if (GAS_URL === 'YOUR_GAS_URL_HERE') {
+  document.getElementById('setup-banner').style.display = 'block';
+}
+
+// 月セレクター初期化
+(function initMonthSel() {
+  const sel = document.getElementById('month-sel');
+  const now = new Date();
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = `${d.getFullYear()}年${d.getMonth()+1}月`;
+    if (i === 1) opt.selected = true;
+    sel.appendChild(opt);
+  }
+})();
+
+function getWorkingDays(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const days = [];
+  const d = new Date(y, m - 1, 1);
+  while (d.getMonth() === m - 1) {
+    if (WORKING_DAYS.includes(d.getDay())) days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ----------------------------------------------------------------
+// 月・名前が変わったら日付リストを再描画 + 履歴を取得
+// ----------------------------------------------------------------
+function onSettingsChange() {
+  const staffId = document.getElementById('staff-sel').value;
+  const month   = document.getElementById('month-sel').value;
+  const submitArea = document.getElementById('submit-area');
+  const resultDiv  = document.getElementById('send-result');
+
+  resultDiv.style.display = 'none';
+  document.getElementById('history-section').style.display = 'none';
+
+  if (!staffId || !month) {
+    document.getElementById('day-list').innerHTML = '<div class="setup-msg">月と名前を選ぶと表示されます</div>';
+    submitArea.style.display = 'none';
+    return;
+  }
+
+  buildDayList(staffId, month);
+  submitArea.style.display = 'block';
+  loadHistory(staffId, month);
+}
+
+function buildDayList(staffId, month) {
+  const staff = STAFF_MAP[staffId];
+  const days  = getWorkingDays(month);
+  const list  = document.getElementById('day-list');
+  list.innerHTML = '';
+
+  days.forEach(d => {
+    const ds    = formatDate(d);
+    const dow   = d.getDay();
+    const isSat = dow === 6;
+
+    const li = document.createElement('li');
+    li.className = 'day-row';
+    li.dataset.date = ds;
+
+    const labelDiv = document.createElement('div');
+    labelDiv.className = `day-label${isSat ? ' sat' : ''}`;
+    labelDiv.innerHTML = `${d.getDate()}日<span class="dow">（${DAY_LABELS[dow]}）</span>`;
+
+    const inputsDiv = document.createElement('div');
+    inputsDiv.className = 'day-inputs';
+
+    const sel = document.createElement('select');
+    sel.className = 'avail-sel is-yes';
+    sel.dataset.date = ds;
+    sel.innerHTML = `
+      <option value="○">○ 出勤できる</option>
+      <option value="×">× 出勤できない</option>
+      <option value="time">時間制限あり</option>
+    `;
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'time-range';
+
+    const startInput = document.createElement('input');
+    startInput.type = 'time';
+    startInput.value = '09:00';
+    startInput.dataset.role = 'start';
+
+    const sep = document.createElement('span');
+    sep.className = 'time-sep';
+    sep.textContent = '〜';
+
+    const endInput = document.createElement('input');
+    endInput.type = 'time';
+    endInput.dataset.role = 'end';
+    endInput.value = staff.maxEndHour
+      ? `${String(staff.maxEndHour).padStart(2,'0')}:00`
+      : '18:00';
+
+    timeDiv.appendChild(startInput);
+    timeDiv.appendChild(sep);
+    timeDiv.appendChild(endInput);
+
+    if (staffId === 'miyuki') {
+      inputsDiv.insertAdjacentHTML('beforeend', '<div class="hint">※ みゆきさんは16時まで。時間制限ありを選んで 9:00〜16:00 で送ってください</div>');
+    }
+
+    sel.addEventListener('change', () => {
+      sel.className = 'avail-sel';
+      if (sel.value === '×') sel.classList.add('is-no');
+      else if (sel.value === '○') sel.classList.add('is-yes');
+      else sel.classList.add('is-time');
+      timeDiv.classList.toggle('visible', sel.value === 'time');
+    });
+
+    inputsDiv.prepend(timeDiv);
+    inputsDiv.prepend(sel);
+    li.appendChild(labelDiv);
+    li.appendChild(inputsDiv);
+    list.appendChild(li);
+  });
+}
+
+// ----------------------------------------------------------------
+// 送信
+// ----------------------------------------------------------------
+function submitAvailability() {
+  const staffId   = document.getElementById('staff-sel').value;
+  const month     = document.getElementById('month-sel').value;
+  const staffName = STAFF_MAP[staffId]?.name || staffId;
+  const btn       = document.getElementById('send-btn');
+  const resultDiv = document.getElementById('send-result');
+
+  if (!staffId) { alert('名前を選んでください'); return; }
+  if (GAS_URL === 'YOUR_GAS_URL_HERE') {
+    showResult('error', '⚠️ まだ設定が完了していません。恵さんに連絡してください。');
+    return;
+  }
+
+  // データ収集
+  const data = {};
+  document.querySelectorAll('.day-row').forEach(row => {
+    const ds  = row.dataset.date;
+    const sel = row.querySelector('select.avail-sel');
+    if (!sel) return;
+    if (sel.value === 'time') {
+      const startH = row.querySelector('input[data-role="start"]').value.split(':')[0].replace(/^0/, '') || '9';
+      const endH   = row.querySelector('input[data-role="end"]').value.split(':')[0].replace(/^0/, '')   || '18';
+      data[ds] = `${startH}-${endH}`;
+    } else {
+      data[ds] = sel.value;
+    }
+  });
+
+  const payload = { staff: staffId, staffName, month, data };
+
+  // 送信中
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  btn.classList.add('sending');
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },  // no-corsではtext/plainのみ通る
+    body: JSON.stringify(payload),
+  })
+  .then(() => {
+    btn.disabled = false;
+    btn.textContent = '送信する →';
+    btn.classList.remove('sending');
+    showResult('success',
+      `✅ 送信完了しました！\n` +
+      `${staffName}さんの ${month} の希望が記録されました。\n` +
+      `恵さんが確認して反映します。修正がある場合は再送信してください（上書きされます）。`
+    );
+    // 履歴を更新
+    loadHistory(staffId, month);
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.textContent = '送信する →';
+    btn.classList.remove('sending');
+    showResult('error', `❌ 送信に失敗しました。\nネット接続を確認してください。\n（${err.message}）`);
+  });
+}
+
+function showResult(type, msg) {
+  const div = document.getElementById('send-result');
+  div.className = `send-result ${type}`;
+  div.textContent = msg;
+  div.style.display = 'block';
+  div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ----------------------------------------------------------------
+// 送信履歴をGASから取得して表示（JSONP）
+// ----------------------------------------------------------------
+function loadHistory(staffId, month) {
+  if (GAS_URL === 'YOUR_GAS_URL_HERE') return;
+
+  const callbackName = `_gasHistory_${Date.now()}`;
+  const script = document.createElement('script');
+
+  window[callbackName] = function(result) {
+    delete window[callbackName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (!result.ok) return;
+
+    // このスタッフの送信のみ抽出（新しい順）
+    const mine = result.submissions
+      .filter(s => s.staffId === staffId)
+      .reverse();
+
+    if (mine.length === 0) return;
+
+    const historySection = document.getElementById('history-section');
+    const historyList    = document.getElementById('history-list');
+    historyList.innerHTML = '';
+
+    mine.slice(0, 5).forEach(sub => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+
+      const summary = buildSummary(sub.data);
+      item.innerHTML = `
+        <div class="hi-ts">📅 送信日時: ${sub.ts}</div>
+        <div class="hi-summary">${summary}</div>
+      `;
+      historyList.appendChild(item);
+    });
+
+    historySection.style.display = 'block';
+  };
+
+  script.onerror = function() {
+    delete window[callbackName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+  };
+
+  script.src = `${GAS_URL}?month=${encodeURIComponent(month)}&callback=${callbackName}`;
+  document.body.appendChild(script);
+}
+
+function buildSummary(data) {
+  const ok   = Object.entries(data).filter(([,v]) => v === '○');
+  const ng   = Object.entries(data).filter(([,v]) => v === '×');
+  const time = Object.entries(data).filter(([,v]) => v !== '○' && v !== '×');
+
+  const parts = [];
+  if (ok.length)   parts.push(`<span class="hi-ok">○出勤可 ${ok.length}日</span>`);
+  if (ng.length)   parts.push(`<span class="hi-no">×不可 ${ng.length}日</span>`);
+  if (time.length) parts.push(`<span class="hi-time">時間制限 ${time.map(([d,v]) => `${d.slice(5)}(${v})`).join('・')}</span>`);
+  return parts.join('　') || '（データなし）';
+}
+</script>
+
+</body>
+</html>
