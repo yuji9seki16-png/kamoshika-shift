@@ -98,6 +98,30 @@ const STAFF = [
     blankIsAvailable: true, // 未入力=○（×の日のみ不可）
   },
   {
+    id: 'yuki',
+    name: 'ゆき',
+    short: 'ゆき',
+    locations: ['ラボ'],
+    maxDaysPerWeek: 2,
+    hourlyRate: 0,
+    monthlyCap: null,
+    color: '#ffcc80',
+    note: 'ラボ単独NG（2名以上体制）。週1〜2日・緩やかなスタート',
+    blankIsUnavailable: true, // 新人：未入力＝出社不可
+  },
+  {
+    id: 'yoko',
+    name: '陽子',
+    short: '陽子',
+    locations: ['経営事務'],
+    maxDaysPerWeek: 1,
+    hourlyRate: 0,
+    monthlyCap: null,
+    color: '#bcaaa4',
+    note: 'バックオフィス専任。出社週1日・4〜5時間＋在宅週1日程度。現場配置なし',
+    blankIsUnavailable: true, // 新人：未入力＝出社不可
+  },
+  {
     id: 'kamoshika',
     name: 'カモシカ氏（雄介）',
     short: 'カモシカ氏',
