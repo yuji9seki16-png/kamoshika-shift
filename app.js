@@ -30,8 +30,6 @@ const STAFF = [
     short: 'みお',
     locations: ['食堂'],
     maxDaysPerWeek: null,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#80cbc4',
     blankIsAvailable: true,
   },
@@ -41,8 +39,6 @@ const STAFF = [
     short: 'あかね',
     locations: ['ラボ'],
     maxDaysPerWeek: null,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#ef9a9a',
     labSoloOk: true,
     blankIsAvailable: true,
@@ -53,8 +49,6 @@ const STAFF = [
     short: '京香',
     locations: ['ラボ'],
     maxDaysPerWeek: null,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#90caf9',
     note: 'ラボ単独OK（条件付き解放。2名以上が望ましい）',
     blankIsUnavailable: true, // 5月暫定：未入力＝出社不可
@@ -66,9 +60,6 @@ const STAFF = [
     locations: ['食堂'],
     maxDaysPerWeek: 3,
     maxEndHour: 16,
-    hourlyRate: 0,
-    monthlyCap: null,
-    monthlyCapSoft: null,
     color: '#a5d6a7',
     note: '103万の壁 / 9-16時・週3日上限',
   },
@@ -79,8 +70,6 @@ const STAFF = [
     locations: ['食堂', 'ラボ'],
     maxDaysPerWeek: null,
     isEmployee: true,   // 社員
-    hourlyRate: 0,      // 月給制のため時給計算なし
-    monthlyCap: null,
     color: '#fff176',
     labSoloOk: true,
     blankIsAvailable: true, // 未入力=○（イベント・出張時のみ×）
@@ -91,8 +80,6 @@ const STAFF = [
     short: 'あさみ',
     locations: ['食堂', 'マルシェ', 'ラボ'],
     maxDaysPerWeek: null,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#ce93d8',
     note: 'ラボ単独NG（2名以上体制）',
     blankIsAvailable: true, // 未入力=○（×の日のみ不可）
@@ -103,8 +90,6 @@ const STAFF = [
     short: 'ゆき',
     locations: ['ラボ'],
     maxDaysPerWeek: 2,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#ffcc80',
     note: 'ラボ単独NG（2名以上体制）。週1〜2日・緩やかなスタート',
     blankIsUnavailable: true, // 新人：未入力＝出社不可
@@ -115,8 +100,6 @@ const STAFF = [
     short: '陽子',
     locations: ['経営事務'],
     maxDaysPerWeek: 1,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#bcaaa4',
     note: 'バックオフィス専任。出社週1日・4〜5時間＋在宅週1日程度。現場配置なし',
     blankIsUnavailable: true, // 新人：未入力＝出社不可
@@ -128,8 +111,6 @@ const STAFF = [
     locations: ['マルシェ', 'ラボ'],
     isOwner: true,
     isFlex: true,   // 人員外・緊急時投入
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#b0bec5',
     labSoloOk: true,
     note: '人員外。マルシェ販売のみ対応可（食堂不可）。ラボ強化日と販売完全空白時のみ投入',
@@ -141,13 +122,39 @@ const STAFF = [
     locations: ['食堂', 'マルシェ', 'ラボ'],
     targetDaysPerWeek: 3,
     isOwner: true,
-    hourlyRate: 0,
-    monthlyCap: null,
     color: '#f48fb1',
     labSoloOk: true,
     blankIsAvailable: true, // 未入力=○（イベント・出張時のみ×）
   },
 ];
+
+// 時給・月収上限は公開リポジトリに含めない（GAS側で保持し、起動時に取得する）
+// GASから取得できるまでは0/nullとして扱う（applyStaffRates()で上書きされる）
+STAFF.forEach(s => { s.hourlyRate = 0; s.monthlyCap = null; s.monthlyCapSoft = undefined; });
+
+function applyStaffRates(rates) {
+  if (!rates) return;
+  STAFF.forEach(s => {
+    const r = rates[s.id];
+    if (!r) return;
+    s.hourlyRate = r.hourlyRate || 0;
+    s.monthlyCap = r.monthlyCap ?? null;
+    if (r.monthlyCapSoft !== undefined) s.monthlyCapSoft = r.monthlyCapSoft;
+  });
+}
+
+function fetchStaffRates() {
+  if (GAS_URL === 'YOUR_GAS_URL_HERE') return;
+  fetch(`${GAS_URL}?action=rates`)
+    .then(r => r.json())
+    .then(result => {
+      if (result && result.ok && result.rates) {
+        applyStaffRates(result.rates);
+        renderApp();
+      }
+    })
+    .catch(() => { /* 取得失敗時は0/null表示のまま */ });
+}
 
 // ===================================================================
 // MASTER DATA — シフト枠
@@ -2285,4 +2292,5 @@ function doTransfer(file) {
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
   renderApp();
+  fetchStaffRates();
 });
