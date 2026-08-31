@@ -20,8 +20,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoKsne20Efq_J6QrjE_Ivq
 // ===================================================================
 
 // ラボに単独で入れるスタッフID（それ以外は2名以上体制必須）
-// 京香は条件付きで単独OK（2名以上推奨だが緊急時・特定日は1人可）
-const LAB_SOLO_OK = new Set(['megumi', 'naomi', 'akane', 'kyoka']);
+const LAB_SOLO_OK = new Set(['megumi', 'naomi', 'akane']);
 
 const STAFF = [
   {
@@ -42,16 +41,6 @@ const STAFF = [
     color: '#ef9a9a',
     labSoloOk: true,
     blankIsAvailable: true,
-  },
-  {
-    id: 'kyoka',
-    name: '京香',
-    short: '京香',
-    locations: ['ラボ'],
-    maxDaysPerWeek: null,
-    color: '#90caf9',
-    note: 'ラボ単独OK（条件付き解放。2名以上が望ましい）',
-    blankIsUnavailable: true, // 5月暫定：未入力＝出社不可
   },
   {
     id: 'miyuki',
@@ -92,16 +81,6 @@ const STAFF = [
     maxDaysPerWeek: 2,
     color: '#ffcc80',
     note: 'ラボ単独NG（2名以上体制）。週1〜2日・緩やかなスタート',
-    blankIsUnavailable: true, // 新人：未入力＝出社不可
-  },
-  {
-    id: 'yoko',
-    name: '陽子',
-    short: '陽子',
-    locations: ['経営事務'],
-    maxDaysPerWeek: 1,
-    color: '#bcaaa4',
-    note: 'バックオフィス専任。出社週1日・4〜5時間＋在宅週1日程度。現場配置なし',
     blankIsUnavailable: true, // 新人：未入力＝出社不可
   },
   {
@@ -220,19 +199,19 @@ const SEEDED_AVAILABILITY = {
   "2026-05-08": { "miyuki": true,  "akane": true,  "mio": false },
   "2026-05-09": { "miyuki": false, "akane": true,  "mio": false },
   "2026-05-12": { "miyuki": true,  "akane": true,  "mio": true  },
-  "2026-05-13": { "miyuki": true,  "kyoka": true  },
-  "2026-05-14": { "miyuki": true,  "asami": false, "akane": true,  "kyoka": true,  "mio": false },
-  "2026-05-15": { "miyuki": false, "asami": false, "akane": true,  "kyoka": true,  "mio": false },
+  "2026-05-13": { "miyuki": true },
+  "2026-05-14": { "miyuki": true,  "asami": false, "akane": true, "mio": false },
+  "2026-05-15": { "miyuki": false, "asami": false, "akane": true, "mio": false },
   "2026-05-16": { "miyuki": false, "asami": false, "akane": true,  "mio": false },
   "2026-05-19": { "miyuki": true,  "akane": true,  "mio": false },
   "2026-05-20": { "miyuki": true,  "akane": true,  "mio": false },
-  "2026-05-21": { "miyuki": true,  "asami": true,  "akane": true,  "kyoka": true,  "mio": false },
-  "2026-05-22": { "miyuki": true,  "akane": true,  "kyoka": true,  "mio": false },
+  "2026-05-21": { "miyuki": true,  "asami": true,  "akane": true, "mio": false },
+  "2026-05-22": { "miyuki": true,  "akane": true, "mio": false },
   "2026-05-23": { "miyuki": false, "akane": false, "mio": true  },
   "2026-05-26": { "miyuki": true,  "akane": true,  "mio": true  },
-  "2026-05-27": { "miyuki": true,  "asami": false, "kyoka": true,  "mio": true  },
+  "2026-05-27": { "miyuki": true,  "asami": false, "mio": true  },
   "2026-05-28": { "miyuki": true,  "akane": true,  "mio": true  },
-  "2026-05-29": { "miyuki": false, "akane": true,  "kyoka": true  },
+  "2026-05-29": { "miyuki": false, "akane": true },
   "2026-05-30": { "miyuki": false, "akane": false, "mio": true  },
 };
 
@@ -243,18 +222,15 @@ const AVAILABILITY_NOTES = {
   "2026-05-08": { "akane": "11-18" },
   "2026-05-09": { "akane": "11-18" },
   "2026-05-12": { "akane": "11-18" },
-  "2026-05-13": { "kyoka": "9-15" },
-  "2026-05-14": { "akane": "11-18", "kyoka": "9-12" },
-  "2026-05-15": { "akane": "16-18のみ", "kyoka": "9-12" },
   "2026-05-16": { "akane": "12-18" },
   "2026-05-19": { "akane": "11-18" },
   "2026-05-20": { "akane": "11-18" },
-  "2026-05-21": { "asami": "9-12のみ", "akane": "11-18", "kyoka": "9-15" },
-  "2026-05-22": { "akane": "16-18のみ", "kyoka": "9-12" },
+  "2026-05-21": { "asami": "9-12のみ", "akane": "11-18" },
+  "2026-05-22": { "akane": "16-18のみ" },
   "2026-05-26": { "akane": "11-18" },
-  "2026-05-27": { "kyoka": "9-15" },
+  "2026-05-27": {},
   "2026-05-28": { "akane": "11-18" },
-  "2026-05-29": { "akane": "16-18のみ", "kyoka": "9-12" },
+  "2026-05-29": { "akane": "16-18のみ" },
   "2026-05-30": { "akane": "12-18" },
 };
 
@@ -1063,8 +1039,8 @@ function renderStaffTab() {
           <li>🏠 <strong>食堂 午後（15:00-18:00）</strong>：1名（16時以降の空白に注意。<strong>マルシェ販売が2名以上なら1名を食堂午後に回す</strong>）</li>
           <li>🗓 <strong>金曜 朝（9:00-11:30）</strong>：全体会議(10:30〜) → 2名体制が必要</li>
           <li>🛒 <strong>マルシェ 販売（11:30-17:00）</strong>：<strong>基本1名で運営可</strong>（1名 必須・最小限）。2名以上いる場合は余剰人員を食堂午後の16-18カバーに回す</li>
-          <li>🧪 <strong>ラボ</strong>：水槽管理が最優先。あかね・京香・直美・オーナー・恵が中心</li>
-          <li>🧪 <strong>ラボ単独OK</strong>：恵・直美・あかね・京香（条件付き解放）。2名以上が望ましい</li>
+          <li>🧪 <strong>ラボ</strong>：水槽管理が最優先。あかね・直美・オーナー・恵が中心</li>
+          <li>🧪 <strong>ラボ単独OK</strong>：恵・直美・あかね。2名以上が望ましい</li>
           <li>🧪 <strong>ラボ強化日（月2〜3回）</strong>：恵・直美・あかね 3名が同時にラボに入る日を必須設定</li>
           <li>🌅 <strong>出荷担当（9:00-11:30）</strong>：直美・あさみ・恵のいずれか1名。直美・あさみが食堂の場合は恵が優先</li>
           <li>👩‍💼 <strong>直美（正社員）</strong>：9:00-18:00 フル稼働・どこでも担当可。コアタイム入りの場合は朝（9-11:30）を出荷 or 食堂仕込みで埋める</li>
@@ -1382,7 +1358,7 @@ function doImportCode() {
 const EXCEL_STAFF_MAP = {
   '恵': 'megumi', '直美': 'naomi', 'ジル': null,
   'みゆき': 'miyuki', '麻美': 'asami',
-  '朱音': 'akane', '京佳': 'kyoka', 'みお': 'mio',
+  '朱音': 'akane', 'みお': 'mio',
 };
 const DAY_COLS = [2, 7, 12, 17, 22, 27, 32];
 
@@ -1527,7 +1503,6 @@ const LOCATION_SLOTS = {
                'マルシェ': ['marche_ship', 'marche_sales_am', 'marche_sales_pm'],
                'ラボ':     ['lab_day'] },
   akane:     { 'ラボ': ['lab_day'] },
-  kyoka:     { 'ラボ': ['lab_day'] },
   kamoshika: { 'マルシェ': ['marche_sales_am', 'marche_sales_pm'],
                'ラボ':     ['lab_day'] },
 };
@@ -1801,7 +1776,6 @@ function autoAssignMonth() {
 
         // 1. ラボ専任（入れれば入る、なければクローズ）
         placeAt('akane', 'ラボ');
-        placeAt('kyoka', 'ラボ');
 
         // 2. 食堂朝担当：みゆき（朝+コア）
         placeAt('miyuki', '食堂');
@@ -2177,7 +2151,7 @@ function doTransfer(file) {
   // スタッフID → 週ブロック内の行オフセット（日付行からの差分）
   const STAFF_OFFSETS = {
     megumi: 15, naomi: 16, miyuki: 18,
-    asami: 19, akane: 20, kyoka: 21, mio: 22,
+    asami: 19, akane: 20, mio: 22,
   };
 
   // 週内の日付インデックス → 列番号（1始まり）
