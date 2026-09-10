@@ -84,6 +84,17 @@ const STAFF = [
     blankIsUnavailable: true, // 新人：未入力＝出社不可
   },
   {
+    id: 'tami',
+    name: '民',
+    short: '民',
+    locations: ['食堂', 'ラボ'],
+    maxDaysPerWeek: 3,
+    maxEndHour: 15,
+    color: '#90caf9',
+    note: '新人：週2〜3日・10-15時目安。ラボ単独NG（2名以上体制）',
+    blankIsUnavailable: true, // 新人：未入力＝出社不可
+  },
+  {
     id: 'kamoshika',
     name: 'カモシカ氏（雄介）',
     short: 'カモシカ氏',
@@ -1358,7 +1369,7 @@ function doImportCode() {
 const EXCEL_STAFF_MAP = {
   '恵': 'megumi', '直美': 'naomi', 'ジル': null,
   'みゆき': 'miyuki', '麻美': 'asami',
-  '朱音': 'akane', 'みお': 'mio',
+  '朱音': 'akane', 'みお': 'mio', '民': 'tami',
 };
 const DAY_COLS = [2, 7, 12, 17, 22, 27, 32];
 
