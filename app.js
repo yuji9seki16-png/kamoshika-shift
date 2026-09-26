@@ -95,6 +95,16 @@ const STAFF = [
     blankIsUnavailable: true, // 新人：未入力＝出社不可
   },
   {
+    id: 'tomoko',
+    name: 'ともこ',
+    short: 'ともこ',
+    locations: ['食堂', 'ラボ'],
+    maxDaysPerWeek: 3,
+    color: '#bcaaa4',
+    note: '新人：週3日目安。ラボ単独NG（2名以上体制）',
+    blankIsAvailable: true, // 未入力=○（×の日のみ不可）
+  },
+  {
     id: 'kamoshika',
     name: 'カモシカ氏（雄介）',
     short: 'カモシカ氏',
@@ -224,6 +234,11 @@ const SEEDED_AVAILABILITY = {
   "2026-05-28": { "miyuki": true,  "akane": true,  "mio": true  },
   "2026-05-29": { "miyuki": false, "akane": true },
   "2026-05-30": { "miyuki": false, "akane": false, "mio": true  },
+  // 10月 ともこさんの入れない日（2026-09-26 本人連絡）
+  "2026-10-01": { "tomoko": false },
+  "2026-10-03": { "tomoko": false },
+  "2026-10-13": { "tomoko": false },
+  "2026-10-17": { "tomoko": false },
 };
 
 // 時間制限メモ（UIには現在未表示・参考用）
@@ -1369,7 +1384,7 @@ function doImportCode() {
 const EXCEL_STAFF_MAP = {
   '恵': 'megumi', '直美': 'naomi', 'ジル': null,
   'みゆき': 'miyuki', '麻美': 'asami',
-  '朱音': 'akane', 'みお': 'mio', '民': 'tami',
+  '朱音': 'akane', 'みお': 'mio', '民': 'tami', '智子': 'tomoko', 'ともこ': 'tomoko',
 };
 const DAY_COLS = [2, 7, 12, 17, 22, 27, 32];
 
