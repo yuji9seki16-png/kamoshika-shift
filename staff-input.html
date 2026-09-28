@@ -57,20 +57,6 @@
     .time-range input[type="time"] { flex: 1; font-size: 15px; padding: 8px 10px; }
     .time-sep { font-size: 14px; color: #888; flex-shrink: 0; }
     .hint { font-size: 11px; color: #888; margin-top: 4px; }
-    .guide { font-size: 13px; color: #6d4c41; line-height: 1.6; background: #faf6f2; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
-    .cal { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-    .cal-head { text-align: center; font-size: 12px; color: #888; padding-bottom: 2px; }
-    .cal-head.sat { color: #1565c0; }
-    .cal-day {
-      aspect-ratio: 1; border: 1px solid #c8e6c9; background: #f1f8e9; color: #1b5e20;
-      border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0;
-    }
-    .cal-day small { font-size: 10px; font-weight: normal; }
-    .cal-day.ng  { background: #ffebee; border-color: #e57373; color: #c62828; }
-    .cal-day.off { background: #eee; border-color: #e0e0e0; color: #aaa; cursor: default; }
-    .cal-empty { aspect-ratio: 1; }
-    .ng-count { margin-top: 10px; font-size: 13px; color: #c62828; text-align: right; min-height: 1em; }
 
     /* 送信ボタン */
     .btn-send {
@@ -154,21 +140,12 @@
     </select>
   </div>
 
-  <!-- ③ ふだん入れる時間帯 -->
+  <!-- ③ 日付入力 -->
   <div class="card">
-    <label class="field-label">③ ふだん入れる時間帯（曜日ごと）</label>
-    <div class="guide">「入りたい時間」ではなく、<b>入ることができる時間</b>を教えてください。</div>
-    <ul class="day-list" id="week-list">
+    <label class="field-label">③ 各日の希望を入力してください</label>
+    <ul class="day-list" id="day-list">
       <div class="setup-msg">月と名前を選ぶと表示されます</div>
     </ul>
-  </div>
-
-  <!-- ④ 入れない日 -->
-  <div class="card">
-    <label class="field-label">④ 入れない日だけタップ</label>
-    <div class="guide">用事があって<b>どうしても入れない日だけ</b>タップしてください（赤くなります）。それ以外の日は、③の時間帯で入れる日として受け取ります。</div>
-    <div class="cal" id="cal"></div>
-    <div class="ng-count" id="ng-count"></div>
   </div>
 
   <!-- 送信ボタン -->
@@ -265,73 +242,78 @@ function onSettingsChange() {
   loadHistory(staffId, month);
 }
 
-// 曜日ごとの「入れる時間帯」と、入れない日（NG日）を聞く
-const weekPrefs = {};   // { dow: { off: bool, start: 'HH:MM', end: 'HH:MM' } }
-const ngDays = new Set();
-
 function buildDayList(staffId, month) {
   const staff = STAFF_MAP[staffId];
-  const defEnd = staff.maxEndHour ? `${String(staff.maxEndHour).padStart(2,'0')}:00` : '18:00';
-  ngDays.clear();
-
-  const list = document.getElementById('week-list');
+  const days  = getWorkingDays(month);
+  const list  = document.getElementById('day-list');
   list.innerHTML = '';
-  WORKING_DAYS.forEach(dow => {
-    weekPrefs[dow] = { off: false, start: '09:00', end: defEnd };
+
+  days.forEach(d => {
+    const ds    = formatDate(d);
+    const dow   = d.getDay();
+    const isSat = dow === 6;
+
     const li = document.createElement('li');
     li.className = 'day-row';
-    li.innerHTML = `
-      <div class="day-label${dow === 6 ? ' sat' : ''}">${DAY_LABELS[dow]}曜</div>
-      <div class="day-inputs">
-        <select class="avail-sel is-yes">
-          <option value="on">入れる</option>
-          <option value="off">この曜日はいつも入れない</option>
-        </select>
-        <div class="time-range visible">
-          <input type="time" data-role="start" value="09:00">
-          <span class="time-sep">〜</span>
-          <input type="time" data-role="end" value="${defEnd}">
-        </div>
-      </div>`;
-    const sel = li.querySelector('select');
-    const timeDiv = li.querySelector('.time-range');
+    li.dataset.date = ds;
+
+    const labelDiv = document.createElement('div');
+    labelDiv.className = `day-label${isSat ? ' sat' : ''}`;
+    labelDiv.innerHTML = `${d.getDate()}日<span class="dow">（${DAY_LABELS[dow]}）</span>`;
+
+    const inputsDiv = document.createElement('div');
+    inputsDiv.className = 'day-inputs';
+
+    const sel = document.createElement('select');
+    sel.className = 'avail-sel is-yes';
+    sel.dataset.date = ds;
+    sel.innerHTML = `
+      <option value="○">○ 出勤できる</option>
+      <option value="×">× 出勤できない</option>
+      <option value="time">時間制限あり</option>
+    `;
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'time-range';
+
+    const startInput = document.createElement('input');
+    startInput.type = 'time';
+    startInput.value = '09:00';
+    startInput.dataset.role = 'start';
+
+    const sep = document.createElement('span');
+    sep.className = 'time-sep';
+    sep.textContent = '〜';
+
+    const endInput = document.createElement('input');
+    endInput.type = 'time';
+    endInput.dataset.role = 'end';
+    endInput.value = staff.maxEndHour
+      ? `${String(staff.maxEndHour).padStart(2,'0')}:00`
+      : '18:00';
+
+    timeDiv.appendChild(startInput);
+    timeDiv.appendChild(sep);
+    timeDiv.appendChild(endInput);
+
+    if (staffId === 'miyuki') {
+      inputsDiv.insertAdjacentHTML('beforeend', '<div class="hint">※ みゆきさんは16時まで。時間制限ありを選んで 9:00〜16:00 で送ってください</div>');
+    }
+
     sel.addEventListener('change', () => {
-      weekPrefs[dow].off = sel.value === 'off';
-      sel.className = 'avail-sel ' + (weekPrefs[dow].off ? 'is-no' : 'is-yes');
-      timeDiv.classList.toggle('visible', !weekPrefs[dow].off);
-      buildCalendar(month);
+      sel.className = 'avail-sel';
+      if (sel.value === '×') sel.classList.add('is-no');
+      else if (sel.value === '○') sel.classList.add('is-yes');
+      else sel.classList.add('is-time');
+      timeDiv.classList.toggle('visible', sel.value === 'time');
     });
-    li.querySelector('[data-role="start"]').addEventListener('change', e => { weekPrefs[dow].start = e.target.value; });
-    li.querySelector('[data-role="end"]').addEventListener('change',   e => { weekPrefs[dow].end   = e.target.value; });
+
+    inputsDiv.prepend(timeDiv);
+    inputsDiv.prepend(sel);
+    li.appendChild(labelDiv);
+    li.appendChild(inputsDiv);
     list.appendChild(li);
   });
-  buildCalendar(month);
-}
-
-function buildCalendar(month) {
-  const cal = document.getElementById('cal');
-  cal.innerHTML = WORKING_DAYS.map(dow =>
-    `<div class="cal-head${dow === 6 ? ' sat' : ''}">${DAY_LABELS[dow]}</div>`).join('');
-  const days = getWorkingDays(month);
-  // 1週目の頭を曜日位置に合わせる
-  for (let i = 0; i < WORKING_DAYS.indexOf(days[0].getDay()); i++) {
-    cal.insertAdjacentHTML('beforeend', '<div class="cal-empty"></div>');
-  }
-  days.forEach(d => {
-    const ds  = formatDate(d);
-    const off = weekPrefs[d.getDay()].off;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cal-day' + (off ? ' off' : ngDays.has(ds) ? ' ng' : '');
-    btn.innerHTML = `${d.getDate()}<small>${off ? '休み' : ngDays.has(ds) ? '入れない' : ''}</small>`;
-    if (!off) btn.addEventListener('click', () => {
-      ngDays.has(ds) ? ngDays.delete(ds) : ngDays.add(ds);
-      buildCalendar(month);
-    });
-    cal.appendChild(btn);
-  });
-  const n = [...ngDays].filter(ds => ds.startsWith(month)).length;
-  document.getElementById('ng-count').textContent = n ? `入れない日：${n}日` : '';
 }
 
 // ----------------------------------------------------------------
@@ -352,13 +334,17 @@ function submitAvailability() {
 
   // データ収集
   const data = {};
-  getWorkingDays(month).forEach(d => {
-    const ds = formatDate(d);
-    const p  = weekPrefs[d.getDay()];
-    if (p.off || ngDays.has(ds)) { data[ds] = '×'; return; }
-    const startH = Number(p.start.split(':')[0]) || 9;
-    const endH   = Number(p.end.split(':')[0])   || 18;
-    data[ds] = (startH <= 9 && endH >= 18) ? '○' : `${startH}-${endH}`;
+  document.querySelectorAll('.day-row').forEach(row => {
+    const ds  = row.dataset.date;
+    const sel = row.querySelector('select.avail-sel');
+    if (!sel) return;
+    if (sel.value === 'time') {
+      const startH = row.querySelector('input[data-role="start"]').value.split(':')[0].replace(/^0/, '') || '9';
+      const endH   = row.querySelector('input[data-role="end"]').value.split(':')[0].replace(/^0/, '')   || '18';
+      data[ds] = `${startH}-${endH}`;
+    } else {
+      data[ds] = sel.value;
+    }
   });
 
   const payload = { staff: staffId, staffName, month, data };
