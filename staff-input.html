@@ -57,6 +57,23 @@
     .time-range input[type="time"] { flex: 1; font-size: 15px; padding: 8px 10px; }
     .time-sep { font-size: 14px; color: #888; flex-shrink: 0; }
     .hint { font-size: 11px; color: #888; margin-top: 4px; }
+    /* 入力のしかた */
+    .howto { border-top: 4px solid #8d6e63; }
+    .howto h2 { margin: 0 0 12px; font-size: 16px; color: #4e342e; line-height: 1.5; }
+    .howto ul { list-style: none; margin: 0 0 14px; padding: 0; }
+    .howto li { display: flex; align-items: center; gap: 10px; font-size: 14px; padding: 5px 0; }
+    .mark {
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px;
+    }
+    .mark.yes  { background: #f1f8e9; color: #1b5e20; border: 1px solid #81c784; }
+    .mark.no   { background: #fff3f3; color: #c62828; border: 1px solid #e57373; }
+    .mark.time { background: #fff8e1; color: #e65100; border: 1px solid #ffd54f; font-size: 13px; }
+    .howto .note {
+      background: #fdf6e3; border-radius: 8px; padding: 10px 12px;
+      font-size: 13px; line-height: 1.7; color: #5d4037;
+    }
 
     /* 送信ボタン */
     .btn-send {
@@ -119,6 +136,20 @@
     ⚠️ まだ設定が完了していません。恵さんに連絡してください。
   </div>
 
+  <!-- 入力のしかた -->
+  <div class="card howto">
+    <h2>勤務可能日・勤務可能時間を<br>入力してください</h2>
+    <ul>
+      <li><span class="mark yes">○</span>働ける日は ○</li>
+      <li><span class="mark no">×</span>働けない日は ×</li>
+      <li><span class="mark time">⏰</span>○の日は「働ける時間の幅」を入力</li>
+    </ul>
+    <div class="note">
+      ○は<b>勤務が確定する日ではありません</b>。<br>
+      勤務できる日は、<b>すべて○</b>にしてください。
+    </div>
+  </div>
+
   <!-- ① 月選択 -->
   <div class="card">
     <label class="field-label">① 月を選ぶ</label>
@@ -142,7 +173,7 @@
 
   <!-- ③ 日付入力 -->
   <div class="card">
-    <label class="field-label">③ 各日、入れるかどうかを入力してください</label>
+    <label class="field-label">③ 各日、働けるかどうかを入力してください</label>
     <ul class="day-list" id="day-list">
       <div class="setup-msg">月と名前を選ぶと表示されます</div>
     </ul>
@@ -268,9 +299,9 @@ function buildDayList(staffId, month) {
     sel.className = 'avail-sel is-yes';
     sel.dataset.date = ds;
     sel.innerHTML = `
-      <option value="○">○ 出勤できる</option>
-      <option value="×">× 出勤できない</option>
-      <option value="time">時間制限あり</option>
+      <option value="○">○ 働ける（何時でもOK）</option>
+      <option value="time">○ 働ける（時間の幅を入れる）</option>
+      <option value="×">× 働けない</option>
     `;
 
     const timeDiv = document.createElement('div');
@@ -297,7 +328,7 @@ function buildDayList(staffId, month) {
     timeDiv.appendChild(endInput);
 
     if (staffId === 'miyuki') {
-      inputsDiv.insertAdjacentHTML('beforeend', '<div class="hint">※ みゆきさんは16時まで。時間制限ありを選んで 9:00〜16:00 で送ってください</div>');
+      inputsDiv.insertAdjacentHTML('beforeend', '<div class="hint">※ みゆきさんは16時まで。「時間の幅を入れる」を選んで 9:00〜16:00 で送ってください</div>');
     }
 
     sel.addEventListener('change', () => {
