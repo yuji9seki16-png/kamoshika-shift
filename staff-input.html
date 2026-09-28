@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>シフト希望入力 — カモシカ</title>
+  <title>シフト可能日入力 — カモシカ</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -108,7 +108,7 @@
 <body>
 
 <header>
-  <h1>🦌 シフト希望入力</h1>
+  <h1>🦌 シフト可能日入力</h1>
   <p>発酵食堂カモシカ スタッフ用</p>
 </header>
 
@@ -142,7 +142,7 @@
 
   <!-- ③ 日付入力 -->
   <div class="card">
-    <label class="field-label">③ 各日の希望を入力してください</label>
+    <label class="field-label">③ 各日、入れるかどうかを入力してください</label>
     <ul class="day-list" id="day-list">
       <div class="setup-msg">月と名前を選ぶと表示されます</div>
     </ul>
@@ -366,7 +366,7 @@ function submitAvailability() {
     btn.classList.remove('sending');
     showResult('success',
       `✅ 送信完了しました！\n` +
-      `${staffName}さんの ${month} の希望が記録されました。\n` +
+      `${staffName}さんの ${month} のシフト可能日が記録されました。\n` +
       `恵さんが確認して反映します。修正がある場合は再送信してください（上書きされます）。`
     );
     // 履歴を更新
