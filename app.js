@@ -81,7 +81,7 @@ const STAFF = [
     maxDaysPerWeek: 2,
     color: '#ffcc80',
     note: 'ラボ単独NG（2名以上体制）。週1〜2日・緩やかなスタート',
-    blankIsUnavailable: true, // 新人：未入力＝出社不可
+    blankIsAvailable: true, // 未入力=○（×の日のみ不可）※2026-09-28 全員同じルールに統一
   },
   {
     id: 'tami',
@@ -92,7 +92,7 @@ const STAFF = [
     maxEndHour: 15,
     color: '#90caf9',
     note: '新人：週2〜3日・10-15時目安。ラボ単独NG（2名以上体制）',
-    blankIsUnavailable: true, // 新人：未入力＝出社不可
+    blankIsAvailable: true, // 未入力=○（×の日のみ不可）※2026-09-28 全員同じルールに統一
   },
   {
     id: 'tomoko',
@@ -234,11 +234,30 @@ const SEEDED_AVAILABILITY = {
   "2026-05-28": { "miyuki": true,  "akane": true,  "mio": true  },
   "2026-05-29": { "miyuki": false, "akane": true },
   "2026-05-30": { "miyuki": false, "akane": false, "mio": true  },
-  // 10月 ともこさんの入れない日（2026-09-26 本人連絡）
-  "2026-10-01": { "tomoko": false },
-  "2026-10-03": { "tomoko": false },
-  "2026-10-13": { "tomoko": false },
-  "2026-10-17": { "tomoko": false },
+  // 10月：ともこ＝本人連絡の不可日（2026-09-26）／ゆき・民＝全員「未入力=○」に統一する前の表示を残す（2026-09-28）
+  "2026-10-01": { "yuki": false, "tami": false, "tomoko": false },
+  "2026-10-02": { "yuki": false, "tami": false },
+  "2026-10-03": { "yuki": false, "tami": false, "tomoko": false },
+  "2026-10-06": { "yuki": false, "tami": true },
+  "2026-10-07": { "yuki": true, "tami": false },
+  "2026-10-08": { "yuki": false, "tami": false },
+  "2026-10-09": { "yuki": false, "tami": false },
+  "2026-10-10": { "yuki": false, "tami": true },
+  "2026-10-13": { "yuki": false, "tami": true, "tomoko": false },
+  "2026-10-14": { "yuki": true, "tami": true },
+  "2026-10-15": { "yuki": false, "tami": false },
+  "2026-10-16": { "yuki": false, "tami": false },
+  "2026-10-17": { "yuki": false, "tami": false, "tomoko": false },
+  "2026-10-20": { "yuki": false, "tami": true },
+  "2026-10-21": { "yuki": true, "tami": true },
+  "2026-10-22": { "yuki": false, "tami": false },
+  "2026-10-23": { "yuki": false, "tami": false },
+  "2026-10-24": { "yuki": false, "tami": false },
+  "2026-10-27": { "yuki": false, "tami": true },
+  "2026-10-28": { "yuki": true, "tami": true },
+  "2026-10-29": { "yuki": false, "tami": false },
+  "2026-10-30": { "yuki": false, "tami": false },
+  "2026-10-31": { "yuki": false, "tami": false },
 };
 
 // 時間制限メモ（UIには現在未表示・参考用）
@@ -258,6 +277,10 @@ const AVAILABILITY_NOTES = {
   "2026-05-28": { "akane": "11-18" },
   "2026-05-29": { "akane": "16-18のみ" },
   "2026-05-30": { "akane": "12-18" },
+  "2026-10-07": { "yuki": "9-12" },
+  "2026-10-14": { "yuki": "9-12" },
+  "2026-10-21": { "yuki": "9-12" },
+  "2026-10-28": { "yuki": "9-12" },
 };
 
 // ===================================================================
